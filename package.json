@@ -1,0 +1,29 @@
+{
+  "name": "mcp-complex_plans",
+  "version": "1.0.0",
+  "description": "An MCP server for advanced AI workflow planning, sequential thinking, and task management",
+  "repository": {
+    "type": "git",
+    "url": "https://git.tuchsoft.com/TuchSoft/mcp-complex_plans.git"
+  },
+  "license": "MIT",
+  "author": "Mattia Bonzi <mattia@tuchosft.com>",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "help": "node dist/index.js --help",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "chalk": "^5.6.2",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.9.3"
+  }
+}
