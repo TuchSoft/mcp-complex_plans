@@ -19,12 +19,10 @@ PLAN STRUCTURE:
 2. [Specific Action] -> [Specific File:Line]
 ## Risks/Doubts
 - [Questions for user]
-- "No other details needed" (if none)
 ## Verification
 - [Test commands]
 - [Verification steps]
 # Additional user provided details
-[Leave this section empty when generating a plan, it's reserved for the user]
 ```
 
 CRITICAL RULES:
@@ -34,6 +32,8 @@ CRITICAL RULES:
 - ALWAYS re-read the plan before implementation
 - NEVER proceed without a plan for complex tasks
 - NEVER assume the plan hasn't changed
+- Leave the `Additional user provided details` section empty when generating a plan, it's reserved for the user review
+- If no question or doubts are present write ""No other details needed" in the `Risks/Doubts` section
 - ALWAYS consider details in the `Additional user provided details` section provided by the user, when implementing the plan
 
 WHEN TO USE:
