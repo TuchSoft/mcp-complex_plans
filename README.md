@@ -17,11 +17,6 @@ A Model Context Protocol (MCP) server designed to enhance AI workflows with adva
 
 ## Installation
 
-```bash
-npm install -g @modelcontextprotocol/sdk
-npx @mattiabonzi/mcp-complex_plans
-```
-
 ### Mistral Vibe CLI Configuration
 
 To use this server with Mistral Vibe CLI, add the following configuration to your `~/.vibe/config.toml`:
@@ -31,7 +26,7 @@ To use this server with Mistral Vibe CLI, add the following configuration to you
 name = "complex_plans"
 transport = "stdio"
 command = "npx"
-args = ["@mattiabonzi/mcp-complex_plans"]
+args = ["-y", "@tuchsoft/mcp-complex-plans"]
 
 [tools.complex_plans_create_plan]
 permission = "always"
@@ -51,7 +46,16 @@ permission = "ask"
 
 ## Configuration
 
-The server can be configured using a `.complex_plans/config.json` file in your workspace:
+The server supports multiple configuration methods with the following **priority order** (highest to lowest):
+
+1. **Configuration file** (`.complex_plans/config.json`) - Highest priority
+2. **CLI arguments** - Override environment variables
+3. **Environment variables** - Override default values
+4. **Default values** - Lowest priority
+
+### Configuration File
+
+Create a `.complex_plans/config.json` file in your workspace:
 
 ```json
 {
@@ -61,11 +65,41 @@ The server can be configured using a `.complex_plans/config.json` file in your w
 }
 ```
 
-**Configuration Options**:
+### CLI Arguments
 
-- `default_editor` (string, optional): Default editor for opening files. Default: "zed"
-- `auto_delete_plans` (boolean, optional): Automatically delete plans after implementation. Default: false
-- `add_to_gitignore` (boolean, optional): Automatically add .complex_plans to .gitignore. Default: true
+Override configuration via command line arguments:
+
+```bash
+node dist/index.js --default-editor=vscode --auto-delete-plans=true --add-to-gitignore=false
+```
+
+### Environment Variables
+
+Configure using environment variables:
+
+```bash
+export MCP_COMPLEX_PLANS_DEFAULT_EDITOR="vscode"
+export MCP_COMPLEX_PLANS_AUTO_DELETE_PLANS="true"
+export MCP_COMPLEX_PLANS_ADD_TO_GITIGNORE="false"
+```
+
+### Configuration Options
+
+**All configuration options with their CLI argument and environment variable names:**
+
+| Option | Type | Default | CLI Argument | Environment Variable | Description |
+|--------|------|---------|--------------|----------------------|-------------|
+| `default_editor` | string | `"zed"` | `--default-editor=` | `MCP_COMPLEX_PLANS_DEFAULT_EDITOR` | Default editor for opening files |
+| `auto_delete_plans` | boolean | `false` | `--auto-delete-plans=` | `MCP_COMPLEX_PLANS_AUTO_DELETE_PLANS` | Automatically delete plans after implementation |
+| `add_to_gitignore` | boolean | `true` | `--add-to-gitignore=` | `MCP_COMPLEX_PLANS_ADD_TO_GITIGNORE` | Automatically add .complex_plans to .gitignore |
+
+**Priority Examples:**
+
+1. **Config file overrides everything**: If you have `default_editor: "vscode"` in your config file, it will override both `--default-editor=sublime` CLI argument and `MCP_COMPLEX_PLANS_DEFAULT_EDITOR=zed` environment variable.
+
+2. **CLI overrides environment**: If no config file exists, `--default-editor=sublime` will override `MCP_COMPLEX_PLANS_DEFAULT_EDITOR=zed`.
+
+3. **Environment overrides defaults**: If neither config file nor CLI args are provided, `MCP_COMPLEX_PLANS_DEFAULT_EDITOR=zed` will be used instead of the default value.
 
 ## Usage
 
@@ -102,7 +136,7 @@ Always use the `complex_plans_sequentialthinking` tool for any task that is not 
 **Parameters**:
 - `plan_name` (string, required): Name of the plan (used for filename)
 - `plan_content` (string, required): Markdown content of the plan
-- `workspace_root` (string, optional): Root directory of the workspace (defaults to current directory)
+- `workspace_root` (string, required): Root directory of the workspace
 
 **When to use**:
 - When you need to break down a complex task into manageable steps
@@ -131,7 +165,7 @@ Always use the `complex_plans_sequentialthinking` tool for any task that is not 
 
 **Parameters**:
 - `plan_name` (string, required): Name of the plan to delete
-- `workspace_root` (string, optional): Root directory of the workspace (defaults to current directory)
+- `workspace_root` (string, required): Root directory of the workspace
 
 **When to use**:
 - When a plan has been completed and is no longer needed
@@ -202,13 +236,26 @@ The tool supports multiple editors through configuration. Set `default_editor` i
 
 If you get "command not found" errors, you need to install the corresponding CLI tools for your chosen editor.
 
-Example configuration:
+**Example Configurations:**
+
+**Configuration file** (`.complex_plans/config.json`):
 ```json
 {
   "default_editor": "vscode",
   "auto_delete_plans": false,
   "add_to_gitignore": true
 }
+```
+
+**CLI arguments:**
+```bash
+node dist/index.js --default-editor=vscode --auto-delete-plans=false
+```
+
+**Environment variables:**
+```bash
+export MCP_COMPLEX_PLANS_DEFAULT_EDITOR="vscode"
+export MCP_COMPLEX_PLANS_AUTO_DELETE_PLANS="false"
 ```
 
 **Troubleshooting**:
@@ -225,6 +272,8 @@ Example configuration:
 ## Sequential Thinking Integration ✨
 
 This server now includes **fully integrated sequential thinking functionality**! The `sequentialthinking` tool is built directly into our server, providing a unified experience for both planning and deep thinking.
+
+**Credits**: The sequential thinking functionality is inspired by the work from the [Model Context Protocol Servers](https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking) project.
 
 ### Sequential Thinking Tool
 

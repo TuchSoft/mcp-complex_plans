@@ -1,25 +1,70 @@
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import { getWorkspaceRoot } from "../utils.js";
+import { getWorkspaceRoot, loadPromptDescription } from "../utils.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import replaceInFile from "replace-in-file";
+
+interface SearchReplaceBlock {
+  search: string;
+  replace: string;
+}
 
 /**
- * Updates an existing plan file in the .complex_plans directory.
+ * Parses SEARCH/REPLACE blocks from content using the exact logic specified:
+ * 1. Split input by ">>>>>>> REPLACE" to separate individual blocks
+ * 2. Apply regex to each block to extract search/replace parts
+ * 3. Trim the results
+ */
+function parseSearchReplaceBlocks(content: string): SearchReplaceBlock[] {
+  // Step 1: Split input by ">>>>>>> REPLACE" to get individual blocks
+  const rawBlocks = content
+    .split(">>>>>>> REPLACE")
+    .filter((s) => s.trim())
+    .map((s) => s + ">>>>>>> REPLACE");
+
+  if (rawBlocks.length === 0) {
+    return [];
+  }
+
+  const blocks: SearchReplaceBlock[] = [];
+
+  // Step 2: Apply regex to each block to extract search/replace parts
+  const SEARCH_REPLACE_REGEX =
+    /<{7} SEARCH\r?\n(.*?)\r?\n?={7}\r?\n(.*?)\r?\n>{7} REPLACE/gs;
+
+  for (const rawBlock of rawBlocks) {
+    const matches = [...rawBlock.matchAll(SEARCH_REPLACE_REGEX)];
+
+    for (const match of matches) {
+      if (match.length >= 3) {
+        // Step 3: Trim the results
+        blocks.push({
+          search: match[1].trim(),
+          replace: match[2].trim(),
+        });
+      }
+    }
+  }
+
+  return blocks;
+}
+
+/**
+ * Updates an existing plan file in the .complex_plans directory using SEARCH/REPLACE blocks.
  * Always read the plan first to ensure you have the latest content before updating.
  *
  * @param planName - Name of the plan (used for filename)
- * @param newContent - The complete new content for the plan (markdown format)
- * @param workspaceRoot - Root directory of the workspace (defaults to current directory)
+ * @param editContent - SEARCH/REPLACE blocks defining the changes to apply
+ * @param workspaceRoot - Root directory of the workspace ()
  */
 export async function updatePlan(
   planName: string,
-  newContent: string,
+  editContent: string,
   workspaceRoot?: string,
-): Promise<void> {
+): Promise<{ applied: number; warnings: string[] }> {
   const root = workspaceRoot || getWorkspaceRoot();
-  const planDir = join(root, ".complex_plans", planName);
-  const planPath = join(planDir, "plan.md");
+  const planPath = join(root, ".complex_plans", `${planName}.md`);
 
   // Read the existing plan to ensure we have the latest content
   let existingContent = "";
@@ -31,52 +76,111 @@ export async function updatePlan(
     );
   }
 
-  // Write the new content to the plan file
-  writeFileSync(planPath, newContent, "utf8");
+  // Parse SEARCH/REPLACE blocks from the edit content
+  const blocks = parseSearchReplaceBlocks(editContent);
 
-  console.log(`Plan '${planName}' updated successfully.`);
+  if (blocks.length === 0) {
+    throw new Error(
+      "No valid SEARCH/REPLACE blocks found in content.\n" +
+        "Expected format:\n" +
+        "<<<<<<< SEARCH\n" +
+        "[exact content to find]\n" +
+        "=======\n" +
+        "[new content to replace with]\n" +
+        ">>>>>>> REPLACE",
+    );
+  }
+
+  // Prepare replacements for replace-in-file library
+  const replacements = blocks.map((block: SearchReplaceBlock) => ({
+    files: planPath,
+    from: block.search,
+    to: block.replace,
+  }));
+
+  // Apply the replacements sequentially to avoid race conditions
+  // Each replacement sees the results of the previous ones
+  const results = [];
+  for (const replacement of replacements) {
+    const result = await replaceInFile({
+      files: replacement.files,
+      from: replacement.from,
+      to: replacement.to,
+    });
+    results.push(result);
+  }
+
+  // Count applied changes
+  let applied = 0;
+
+  // results is now an array of result arrays (one per replacement)
+  for (let i = 0; i < results.length; i++) {
+    const resultArray = results[i];
+
+    for (const result of resultArray) {
+      if (result.hasChanged && result.numReplacements) {
+        applied += result.numReplacements;
+      }
+    }
+  }
+
+  return {
+    applied,
+    warnings: [],
+  };
 }
 
 // Define the tool schema
 const updatePlanSchema = z.object({
   plan_name: z.string().describe("Name of the plan to update"),
-  plan_content: z
+  edit_content: z
     .string()
-    .describe("Complete new content for the plan (markdown format)"),
-  workspace_root: z
-    .string()
-    .optional()
     .describe(
-      "Root directory of the workspace (defaults to current directory)",
+      "SEARCH/REPLACE blocks defining the changes to apply. " +
+        "Format: <<<<<<< SEARCH\\n[exact text to find]\\n=======\\n[new content]\\n>>>>>>> REPLACE. Multiple blocks can be included in a single request to apply multiple changes sequentially.",
     ),
+  workspace_root: z.string().describe("Root directory of the workspace"),
 });
 
 export function registerUpdatePlanTool(server: McpServer): void {
   server.registerTool(
-    "update_plan",
+    "updatePlan",
     {
-      description:
-        "[mcp-complex_plans] Update an existing plan file in the .complex_plans directory. Always read the plan first to ensure you have the latest content before updating.",
+      description: loadPromptDescription("updatePlan"),
       inputSchema: updatePlanSchema,
     },
     async (params: {
       plan_name: string;
-      plan_content: string;
-      workspace_root?: string;
+      edit_content: string;
+      workspace_root: string;
     }) => {
-      const { plan_name, plan_content, workspace_root } = params;
+      const { plan_name, edit_content, workspace_root } = params;
       try {
-        await updatePlan(plan_name, plan_content, workspace_root);
+        const result = await updatePlan(
+          plan_name,
+          edit_content,
+          workspace_root,
+        );
+
+        // Check if any changes were actually applied
+        if (result.applied === 0) {
+          throw new Error(
+            `No changes were made to plan '${plan_name}'. This could indicate that the search text was not found or the content was already up to date.`,
+          );
+        }
+
         return {
           content: [
             {
-              type: "text",
-              text: `Plan '${plan_name}' updated successfully.`,
+              type: "text" as const,
+              text: `Plan '${plan_name}' updated successfully. Applied ${result.applied} change(s).`,
             },
           ],
         };
       } catch (error) {
-        throw new Error(`Failed to update plan: ${error}`);
+        throw new Error(
+          `Failed to update plan: ${error}. Read the file again from disk before trying another update. Remember not to double escape newlines`,
+        );
       }
     },
   );

@@ -2,33 +2,30 @@ import { z } from "zod";
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { getWorkspaceRoot, getPlanDirectory } from "../utils.js";
+import {
+  getWorkspaceRoot,
+  getPlanDirectory,
+  loadPromptDescription,
+} from "../utils.js";
 
 // Define the tool schema
 const deletePlanSchema = z.object({
   plan_name: z.string().describe("Name of the plan to delete"),
-  workspace_root: z
-    .string()
-    .optional()
-    .describe(
-      "Root directory of the workspace (defaults to current directory)",
-    ),
+  workspace_root: z.string().describe("Root directory of the workspace"),
 });
 
 export function registerDeletePlanTool(server: McpServer): void {
   server.registerTool(
-    "delete_plan",
+    "deletePlan",
     {
-      description:
-        "Delete a plan file from the .complex_plans directory. Note that the directory itself is kept intact as empty directories are not committed to git. Use this tool when a plan has been completed and is no longer needed, when you want to clean up old or obsolete plans, or when you need to remove sensitive information from plans. This operation cannot be undone.",
+      description: loadPromptDescription("deletePlan"),
       inputSchema: deletePlanSchema,
     },
-    async (params: { plan_name: string; workspace_root?: string }) => {
+    async (params: { plan_name: string; workspace_root: string }) => {
       const { plan_name, workspace_root } = params;
       const workspaceRoot = getWorkspaceRoot(workspace_root);
       const planDir = getPlanDirectory(workspaceRoot);
-      const planPath = join(planDir, plan_name);
-      const planFilePath = join(planPath, "plan.md");
+      const planFilePath = join(planDir, `${plan_name}.md`);
 
       try {
         if (!existsSync(planFilePath)) {

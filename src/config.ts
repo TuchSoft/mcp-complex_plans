@@ -16,6 +16,10 @@ const configSchema = z.object({
     .boolean()
     .optional()
     .describe("Automatically add .complex_plans to .gitignore"),
+  disabled_tools: z
+    .array(z.string())
+    .optional()
+    .describe("List of tools to disable"),
 });
 
 export type ServerConfig = z.infer<typeof configSchema>;
@@ -24,22 +28,33 @@ export const DEFAULT_CONFIG: ServerConfig = {
   default_editor: "zed",
   auto_delete_plans: false,
   add_to_gitignore: true,
+  disabled_tools: [],
 };
 
 // Parse environment variables
 function parseEnvVars(): Partial<ServerConfig> {
   const envConfig: Partial<ServerConfig> = {};
 
-  if (process.env.MCP_DEFAULT_EDITOR) {
-    envConfig.default_editor = process.env.MCP_DEFAULT_EDITOR;
+  if (process.env.MCP_COMPLEX_PLANS_DEFAULT_EDITOR) {
+    envConfig.default_editor = process.env.MCP_COMPLEX_PLANS_DEFAULT_EDITOR;
   }
 
-  if (process.env.MCP_AUTO_DELETE_PLANS !== undefined) {
-    envConfig.auto_delete_plans = process.env.MCP_AUTO_DELETE_PLANS === "true";
+  if (process.env.MCP_COMPLEX_PLANS_AUTO_DELETE_PLANS !== undefined) {
+    envConfig.auto_delete_plans =
+      process.env.MCP_COMPLEX_PLANS_AUTO_DELETE_PLANS === "true";
   }
 
-  if (process.env.MCP_ADD_TO_GITIGNORE !== undefined) {
-    envConfig.add_to_gitignore = process.env.MCP_ADD_TO_GITIGNORE === "true";
+  if (process.env.MCP_COMPLEX_PLANS_ADD_TO_GITIGNORE !== undefined) {
+    envConfig.add_to_gitignore =
+      process.env.MCP_COMPLEX_PLANS_ADD_TO_GITIGNORE === "true";
+  }
+
+  if (process.env.MCP_COMPLEX_PLANS_DISABLED_TOOLS) {
+    // Support comma-separated list in environment variable
+    envConfig.disabled_tools =
+      process.env.MCP_COMPLEX_PLANS_DISABLED_TOOLS.split(",")
+        .map((tool) => tool.trim())
+        .filter((tool) => tool.length > 0);
   }
 
   return envConfig;
@@ -47,7 +62,9 @@ function parseEnvVars(): Partial<ServerConfig> {
 
 // Parse CLI arguments
 function parseCliArgs(): Partial<ServerConfig> {
-  const cliConfig: Partial<ServerConfig> = {};
+  const cliConfig: Partial<ServerConfig> = {
+    disabled_tools: [],
+  };
 
   // Parse process.argv manually
   for (let i = 2; i < process.argv.length; i++) {
@@ -59,6 +76,23 @@ function parseCliArgs(): Partial<ServerConfig> {
       cliConfig.auto_delete_plans = arg.split("=")[1] === "true";
     } else if (arg.startsWith("--add-to-gitignore=")) {
       cliConfig.add_to_gitignore = arg.split("=")[1] === "true";
+    } else if (arg.startsWith("--disabled-tools=")) {
+      // Support comma-separated list
+      const tools = arg.split("=")[1].split(",");
+      cliConfig.disabled_tools = [
+        ...(cliConfig.disabled_tools || []),
+        ...tools,
+      ];
+    } else if (arg === "--disabled-tools") {
+      // Support multiple --disabled-tools args
+      const nextArg = process.argv[i + 1];
+      if (nextArg && !nextArg.startsWith("--")) {
+        cliConfig.disabled_tools = [
+          ...(cliConfig.disabled_tools || []),
+          nextArg,
+        ];
+        i++; // Skip the next argument
+      }
     }
   }
 
@@ -79,32 +113,29 @@ export function loadConfig(cliArgs?: Partial<ServerConfig>): ServerConfig {
     if (existsSync(aiPlansConfigPath)) {
       const configContent = readFileSync(aiPlansConfigPath, "utf-8");
       const parsed = JSON.parse(configContent);
-      // 2. Second priority: Environment variables override file config
-      // 3. Third priority: CLI arguments override everything
+      // Config file has highest priority, then CLI args, then env vars
       const merged = {
         ...DEFAULT_CONFIG,
-        ...parsed,
         ...parsedEnvVars,
         ...parsedCliArgs,
+        ...parsed,
       };
       return configSchema.parse(merged);
     }
 
-    // 4. Fourth priority: Environment variables only
-    if (Object.keys(parsedEnvVars).length > 0) {
-      // 5. Fifth priority: CLI arguments override environment variables
+    // 4. Fourth priority: CLI arguments only
+    if (Object.keys(parsedCliArgs).length > 0) {
+      // CLI args override env vars
       const merged = { ...DEFAULT_CONFIG, ...parsedEnvVars, ...parsedCliArgs };
       return configSchema.parse(merged);
     }
 
-    // 6. Sixth priority: CLI arguments only
-    if (Object.keys(parsedCliArgs).length > 0) {
-      const merged = { ...DEFAULT_CONFIG, ...parsedCliArgs };
+    // 6. Fifth priority: Environment variables only
+    if (Object.keys(parsedEnvVars).length > 0) {
+      const merged = { ...DEFAULT_CONFIG, ...parsedEnvVars };
       return configSchema.parse(merged);
     }
-  } catch (error) {
-    console.warn("Failed to load config, using defaults:", error);
-  }
+  } catch (error) {}
 
   // 7. Seventh priority: defaults only
   return DEFAULT_CONFIG;
@@ -122,9 +153,7 @@ export function saveConfig(config: ServerConfig): void {
     }
 
     writeFileSync(configPath, JSON.stringify(config, null, 2), "utf-8");
-  } catch (error) {
-    console.error("Failed to save config:", error);
-  }
+  } catch (error) {}
 }
 
 export const config = loadConfig();

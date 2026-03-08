@@ -3,6 +3,7 @@ import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { config } from "../config.js";
+import { loadPromptDescription } from "../utils.js";
 
 const execAsync = promisify(exec);
 
@@ -65,16 +66,16 @@ function getEditorCommand(filepath: string): string {
       return `nova "${filepath}"`; // Requires Nova CLI: https://nova.app/
     default:
       // Fallback to zed if editor is not recognized
-      console.warn(`Editor "${editor}" not recognized, falling back to zed`);
+
       return `zed -a "${filepath}"`;
   }
 }
 
 export function registerOpenInEditorTool(server: McpServer): void {
   server.registerTool(
-    "open_in_editor",
+    "openInEditor",
     {
-      description: `Open a file in the configured editor for the user to review, terminate the conversation after calling this tool (currently: ${config.default_editor})`,
+      description: loadPromptDescription("openInEditor"),
       inputSchema: openInZedSchema,
     },
     async (params: { filepath: string }) => {
@@ -86,7 +87,7 @@ export function registerOpenInEditorTool(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully opened ${filepath} in ${config.default_editor}`,
+              text: `Successfully opened ${filepath} in ${config.default_editor}. NOW INTERRUPT THE CONVERSATION AND ASK THE USER TO REVIEW THE PLAN`,
             },
           ],
         };
