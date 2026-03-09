@@ -53,9 +53,9 @@ permission = "always"
 permission = "ask"
 ```
 
-#### Use in chat mode
+#### Use in plan/chat mode
 
-To use the tools in chat mode, create or edit the `~/.vibe/agents/chat.toml` configuration file:
+To use the tools in plan/chat mode, create or edit the `~/.vibe/agents/plan.toml` (and/or `chat.toml`) configuration file:
 
 ```toml
 enabled_tools = [
