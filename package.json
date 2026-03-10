@@ -1,6 +1,6 @@
 {
   "name": "@tuchsoft/mcp-complex-plans",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "An MCP server for advanced AI workflow planning, sequential thinking, and task management",
   "keywords": [
     "mcp",
@@ -15,7 +15,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/TuchSoft/mcp-complex_plans"
+    "url": "git+https://github.com/TuchSoft/mcp-complex_plans.git"
   },
   "license": "MIT",
   "author": "Mattia Bonzi <mattia@tuchosft.com>",
@@ -40,6 +40,6 @@
     "typescript": "^5.9.3"
   },
   "bin": {
-    "mcp-complex-plans": "./dist/index.js"
+    "mcp-complex-plans": "dist/index.js"
   }
 }
