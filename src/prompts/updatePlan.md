@@ -6,6 +6,7 @@ Always prefer to specify multiple changes in a single tool call over calling the
 Do not ask confirmation before editing the plan, unless the user request is unclear.
 Do not open the plan for the user to review before editing the plan, unless the user request is unclear.
 After editing a plan (when all edits are done) open the plan for review with the `openInEditor` tool.
+Awlays think with the `sequentialThinking` tool befor updating the plan.
 ONLY USE THIS TOOL FOR EDITING PLANS, NOT FOR NORMAL PROJECT FILES.
 
 The content format is:

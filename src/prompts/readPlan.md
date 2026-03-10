@@ -2,6 +2,7 @@ Read the content of an existing plan file from the .complex_plans directory.
 Use this tool INSTEAD OF read_file to retrieve plan details before updates, reviews, or implementation.
 Use this tool not the standard `read_file` to read a plan.
 ONLY USE THIS TOOL FOR READING PLANS, NOT FOR NORMAL PROJECT FILES
+AWLAYS use this tool before implementing the plan when the user give you permission to procced.
 
 When to use:
 - Retrieving plan content for review or updates

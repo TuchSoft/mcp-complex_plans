@@ -165,7 +165,7 @@ export function registerUpdatePlanTool(server: McpServer): void {
         // Check if any changes were actually applied
         if (result.applied === 0) {
           throw new Error(
-            `No changes were made to plan '${plan_name}'. This could indicate that the search text was not found or the content was already up to date.`,
+            `Please try again. No changes were made to plan '${plan_name}'. CRITICAL: The search text was not found or the content was already up to date. You MUST read the file from disk again to get the current content, then verify your SEARCH text matches exactly (including whitespace and formatting).`,
           );
         }
 
@@ -179,7 +179,7 @@ export function registerUpdatePlanTool(server: McpServer): void {
         };
       } catch (error) {
         throw new Error(
-          `Failed to update plan: ${error}. Read the file again from disk before trying another update. Remember not to double escape newlines`,
+          `Please try again. Failed to update plan: ${error}. IMPORTANT: Always read the file again from disk before attempting another update. The content on disk is the source of truth. Remember: and don't escape newlines.`,
         );
       }
     },

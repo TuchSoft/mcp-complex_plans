@@ -16,7 +16,7 @@ export async function readPlan(
   planName: string,
   readyToImplement: boolean = false,
   workspaceRoot?: string,
-): Promise<{ content: string; instructions?: string }> {
+): Promise<string> {
   const root = workspaceRoot || getWorkspaceRoot();
   const planPath = join(root, ".complex_plans", `${planName}.md`);
 
@@ -33,13 +33,13 @@ export async function readPlan(
   // Add implementation instructions if ready_to_implement is true
   let instructions: string | undefined;
   if (readyToImplement) {
-    instructions = loadPromptDescription("readPlanImplementation");
+    instructions = loadPromptDescription("readPlanImplementation") + "\n";
+  } else {
+    instructions =
+      "The plan is not ready yet for implementation, await user confirmation\n\n";
   }
 
-  return {
-    content: planContent,
-    instructions,
-  };
+  return instructions + planContent;
 }
 
 // Define the tool schema
@@ -68,23 +68,17 @@ export function registerReadPlanTool(server: McpServer): void {
     }) => {
       const { plan_name, ready_to_implement, workspace_root } = params;
       try {
-        const result = await readPlan(
+        const content = await readPlan(
           plan_name,
           ready_to_implement,
           workspace_root,
         );
 
-        // Build the response content
-        let responseContent = result.content;
-        if (result.instructions) {
-          responseContent = result.instructions + "\n" + result.content;
-        }
-
         return {
           content: [
             {
               type: "text" as const,
-              text: responseContent,
+              text: content,
             },
           ],
         };
