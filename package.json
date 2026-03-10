@@ -1,6 +1,6 @@
 {
   "name": "@tuchsoft/mcp-complex-plans",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "An MCP server for advanced AI workflow planning, sequential thinking, and task management",
   "keywords": [
     "mcp",
@@ -26,7 +26,7 @@
     "start": "node dist/index.js",
     "help": "node dist/index.js --help",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "publish": "npm run build && npm publish"
+    "deploy": "npm run build && npm publish"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",

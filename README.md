@@ -44,7 +44,7 @@ permission = "always"
 permission = "always"
 [tools.complex_plans_listPlans]
 permission = "always"
-[tools.complex_plans_readPlans]
+[tools.complex_plans_readPlan]
 permission = "always"
 [tools.complex_plans_deletePlan]
 permission = "ask"
