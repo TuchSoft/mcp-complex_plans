@@ -36,19 +36,16 @@ args = ["-y", "@tuchsoft/mcp-complex-plans"]
 
 [tools.complex_plans_createPlan]
 permission = "always"
-
 [tools.complex_plans_updatePlan]
 permission = "always"
-
 [tools.complex_plans_openInEditor]
 permission = "always"
-
 [tools.complex_plans_sequentialThinking]
 permission = "always"
-
 [tools.complex_plans_listPlans]
 permission = "always"
-
+[tools.complex_plans_readPlans]
+permission = "always"
 [tools.complex_plans_deletePlan]
 permission = "ask"
 ```
@@ -65,6 +62,26 @@ enabled_tools = [
     "complex_plans_sequentialThinking",
     "complex_plans_listPlans"
 ]
+```
+
+### For better results
+
+For better results, [edit your system prompt](https://github.com/mistralai/mistral-vibe?tab=readme-ov-file#custom-system-prompts) to include a snippet like the following to instruct the model when to use this tool:
+
+```markdown
+**FOR COMPLEX, MULTI-FILE EDITS, ALWAYS GENERATE A MARKDOWN PLAN FIRST:** if the user request a complex task that require editing multiple files, traverse the project or make a lot of changes, **YOU MUST** create a markdown plan and ask the user to confirm it before proceeding, use the `complex_plans_createPlan` tool (and consequitive `complex_plans_readPlan`, `complex_plans_updatePlan`, `complex_plans_listPlans`, `complex_plans_openInEditor`, (optional) `complex_plans_deletePlan` tools).
+**ALWAYS** ask the user to review and accept the plan after calling `complex_plans_openInEditor` and **BEFORE** doing anything else, do not proceed with the implementation until the user has accepted the plan.
+Follow the instrucion provided by the tool itself.
+Also if the user request a plan creation **ALWAYS** use the `complex_plans_createPlan` tool.
+```
+
+Optionally, add also this other block to ensure the chain of thought is used whenever possible:
+
+```markdown
+**ALWAYS USE AN INTERNAL CHAIN OF THOUGHT**: Before answering to the user, writing code, editing a file, or performing whatever action, **always** use an internal chain of thought to verify your findings trough the use of the `complex_plans_sequentialthinking` tool.
+Use as many tokens as you believe are necessary for your internal reasoning.
+Output limit and verbosity constraints do not apply to your internal reasoning.
+Always use the `complex_plans_sequentialthinking` tool for any task that is not a direct question-answer, as a rule of thumb if you are reading a file, you must also use the `complex_plans_sequentialthinking` tool.
 ```
 
 ## Usage
