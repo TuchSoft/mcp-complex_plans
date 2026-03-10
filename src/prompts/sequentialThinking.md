@@ -21,6 +21,7 @@ Key features:
 - Verifies the hypothesis based on the Chain of Thought steps
 - Repeats the process until satisfied
 - Provides a correct answer
+- When the user ask you to `Deep think`, `Think better` or similar - plan for very high number of tought then refine down the line
 
 Parameters explained:
 - thought: Your current thinking step

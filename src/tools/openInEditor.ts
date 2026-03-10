@@ -87,7 +87,7 @@ export function registerOpenInEditorTool(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Successfully opened ${filepath} in ${config.default_editor}. NOW INTERRUPT THE CONVERSATION AND ASK THE USER TO REVIEW THE PLAN`,
+              text: `Successfully opened ${filepath} in ${config.default_editor}. NOW INTERRUPT THE CONVERSATION AND ASK THE USER TO REVIEW THE PLAN using \`Please review the plan\``,
             },
           ],
         };

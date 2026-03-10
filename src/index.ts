@@ -12,6 +12,7 @@ import { registerCreatePlanTool } from "./tools/createPlan.js";
 import { registerDeletePlanTool } from "./tools/deletePlan.js";
 import { registerUpdatePlanTool } from "./tools/updatePlan.js";
 import { registerListPlansTool } from "./tools/listPlans.js";
+import { registerReadPlanTool } from "./tools/readPlan.js";
 import { registerSequentialThinkingTools } from "./tools/sequentialThinking.js";
 
 // Parse CLI arguments for configuration
@@ -78,6 +79,7 @@ const toolRegistrations = [
   { name: "deletePlan", register: registerDeletePlanTool },
   { name: "updatePlan", register: registerUpdatePlanTool },
   { name: "listPlans", register: registerListPlansTool },
+  { name: "readPlan", register: registerReadPlanTool },
   { name: "sequentialThinking", register: registerSequentialThinkingTools },
 ];
 
