@@ -75,8 +75,15 @@ export function registerOpenInEditorTool(server: McpServer): void {
   server.registerTool(
     "openInEditor",
     {
+      title: "Open in Editor",
       description: loadPromptDescription("openInEditor"),
       inputSchema: openInZedSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async (params: { filepath: string }) => {
       const { filepath } = params;

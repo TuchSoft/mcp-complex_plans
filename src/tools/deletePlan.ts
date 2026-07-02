@@ -18,8 +18,15 @@ export function registerDeletePlanTool(server: McpServer): void {
   server.registerTool(
     "deletePlan",
     {
+      title: "Delete Plan",
       description: loadPromptDescription("deletePlan"),
       inputSchema: deletePlanSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async (params: { plan_name: string; workspace_root: string }) => {
       const { plan_name, workspace_root } = params;

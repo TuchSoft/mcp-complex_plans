@@ -155,6 +155,12 @@ export function registerSequentialThinkingTools(server: McpServer): void {
         branches: z.array(z.string()),
         thoughtHistoryLength: z.number(),
       }),
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async (args) => {
       const result = thinkingServer.processThought(args);

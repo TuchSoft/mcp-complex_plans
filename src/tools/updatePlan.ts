@@ -7,7 +7,7 @@ import {
 } from "../utils.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import replaceInFile from "replace-in-file";
+import { replaceInFile } from "replace-in-file";
 
 interface SearchReplaceBlock {
   search: string;
@@ -150,8 +150,15 @@ export function registerUpdatePlanTool(server: McpServer): void {
   server.registerTool(
     "updatePlan",
     {
+      title: "Update Plan",
       description: loadPromptDescription("updatePlan"),
       inputSchema: updatePlanSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
     },
     async (params: {
       plan_name: string;

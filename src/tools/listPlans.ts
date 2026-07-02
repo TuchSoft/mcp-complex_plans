@@ -17,8 +17,15 @@ export function registerListPlansTool(server: McpServer): void {
   server.registerTool(
     "listPlans",
     {
+      title: "List Plans",
       description: loadPromptDescription("listPlans"),
       inputSchema: listPlansSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async (params: { workspace_root: string }) => {
       const { workspace_root } = params;

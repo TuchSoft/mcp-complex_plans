@@ -27,8 +27,15 @@ export function registerCreatePlanTool(server: McpServer): void {
   server.registerTool(
     "createPlan",
     {
+      title: "Create Plan",
       description,
       inputSchema: createPlanSchema,
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
     },
     async (params: {
       plan_name: string;

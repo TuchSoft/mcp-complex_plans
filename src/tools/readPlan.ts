@@ -62,8 +62,15 @@ export function registerReadPlanTool(server: McpServer): void {
   server.registerTool(
     "readPlan",
     {
+      title: "Read Plan",
       description: loadPromptDescription("readPlan"),
       inputSchema: readPlanSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async (params: {
       plan_name: string;
