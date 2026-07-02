@@ -16,7 +16,7 @@ A Model Context Protocol (MCP) server designed to enhance AI workflows with adva
 - **Git Integration**: Automatic .gitignore management
 - **Editor Integration**: Open files in your preferred editor for review
 
-All tools operate safely within the `.complex_plans` directory and can be used in both `chat` and `plan` modes.
+All tools operate safely within the configured plans directory (default `.complex_plans`) and can be used in both `chat` and `plan` modes.
 
 ## Installation
 
@@ -60,11 +60,12 @@ enabled_tools = [
     "complex_plans_updatePlan",
     "complex_plans_openInEditor",
     "complex_plans_sequentialThinking",
+    "complex_plans_readPlan",
     "complex_plans_listPlans"
 ]
 ```
 
-### For better results
+#### Recommended System Prompt snippet
 
 For better results, [edit your system prompt](https://github.com/mistralai/mistral-vibe?tab=readme-ov-file#custom-system-prompts) to include a snippet like the following to instruct the model when to use this tool:
 
@@ -78,11 +79,53 @@ Also if the user request a plan creation **ALWAYS** use the `complex_plans_creat
 Optionally, add also this other block to ensure the chain of thought is used whenever possible:
 
 ```markdown
-**ALWAYS USE AN INTERNAL CHAIN OF THOUGHT**: Before answering to the user, writing code, editing a file, or performing whatever action, **always** use an internal chain of thought to verify your findings trough the use of the `complex_plans_sequentialthinking` tool.
+**ALWAYS USE AN INTERNAL CHAIN OF THOUGHT**: Before answering to the user, writing code, editing a file, or performing whatever action, **always** use an internal chain of thought to verify your findings trough the use of the `complex_plans_sequentialThinking` tool.
 Use as many tokens as you believe are necessary for your internal reasoning.
 Output limit and verbosity constraints do not apply to your internal reasoning.
-Always use the `complex_plans_sequentialthinking` tool for any task that is not a direct question-answer, as a rule of thumb if you are reading a file, you must also use the `complex_plans_sequentialthinking` tool.
+Always use the `complex_plans_sequentialThinking` tool for any task that is not a direct question-answer, as a rule of thumb if you are reading a file, you must also use the `complex_plans_sequentialThinking` tool.
 ```
+
+### Claude Code Configuration
+
+To use this server with Claude Code, add the following to your `~/.claude/claude.json` (global) or `.claude/settings.json` (project-level):
+
+**Global configuration** (`~/.claude/claude.json`):
+```json
+{
+  "mcpServers": {
+    "complex_plans": {
+      "command": "npx",
+      "args": ["-y", "@tuchsoft/mcp-complex-plans", "--disabled-tools=sequentialThinking"]
+    }
+  }
+}
+```
+
+Or via the Claude Code CLI:
+```bash
+claude mcp add complex_plans npx -- -y @tuchsoft/mcp-complex-plans --disabled-tools=sequentialThinking
+```
+
+> **Note on `sequentialThinking`**: Claude has native extended reasoning built in. It is strongly recommended to disable the `sequentialThinking` tool (as shown above) to avoid redundancy and conflicts with Claude's own reasoning. When disabled, the tool is completely removed from Claude's context — no instructions about it remain visible.
+
+#### Recommended CLAUDE.md snippet
+
+Add this to your project's `CLAUDE.md` to instruct Claude when to use the planning tools:
+
+```markdown
+## Complex Plans
+
+**FOR COMPLEX, MULTI-FILE EDITS, ALWAYS GENERATE A MARKDOWN PLAN FIRST:** If the user requests a complex task that requires editing multiple files, traversing the project, or making many changes, **YOU MUST** create a markdown plan and ask the user to confirm it before proceeding. Use the `complex_plans_createPlan` tool (and subsequent `complex_plans_readPlan`, `complex_plans_updatePlan`, `complex_plans_listPlans`, `complex_plans_openInEditor`, and optionally `complex_plans_deletePlan` tools).
+
+**ALWAYS** ask the user to review and accept the plan after calling `complex_plans_openInEditor` and **BEFORE** doing anything else. Do not proceed with the implementation until the user has accepted the plan.
+
+Follow the instructions provided by each tool. When asked to create a plan, always use `complex_plans_createPlan`.
+
+**IMPORTANT**: Ignore the built-in `EnterPlanMode` and `ExitPlanMode` tools — use `complex_plans_createPlan` instead for all planning workflows.
+```
+
+> **Note on injected instructions:** The server automatically sends a set of instructions to the model at initialization (e.g. to use the `complex_plans` toolset and, when `auto_delete_plans` is disabled, to treat existing plans as historical data). The snippets above are still useful as fallback or for extra emphasis.
+
 
 ## Usage
 
@@ -96,7 +139,7 @@ Always use the `complex_plans_sequentialthinking` tool for any task that is not 
 
 The server supports multiple configuration methods with the following **priority order** (highest to lowest):
 
-1. **Configuration file at project level** (`[your_project]/.complex_plans/config.json`) - Highest priority
+1. **Configuration file at project level** (`[your_project]/<plans_dir>/config.json`) - Highest priority
 2. **CLI arguments** - Override environment variables
 3. **Environment variables** - Override default values
 4. **Default values** - Lowest priority
@@ -107,7 +150,8 @@ The server supports multiple configuration methods with the following **priority
 |--------|------|---------|--------------|----------------------|-------------|
 | `default_editor` | string | `"zed"` | `--default-editor=` | `MCP_COMPLEX_PLANS_DEFAULT_EDITOR` | Default editor for opening files |
 | `auto_delete_plans` | boolean | `false` | `--auto-delete-plans=` | `MCP_COMPLEX_PLANS_AUTO_DELETE_PLANS` | Automatically delete plans after implementation |
-| `add_to_gitignore` | boolean | `true` | `--add-to-gitignore=` | `MCP_COMPLEX_PLANS_ADD_TO_GITIGNORE` | Automatically add .complex_plans to .gitignore |
+| `add_to_gitignore` | boolean | `true` | `--add-to-gitignore=` | `MCP_COMPLEX_PLANS_ADD_TO_GITIGNORE` | Automatically add the plans directory to .gitignore |
+| `plans_dir` | string | `".complex_plans"` | `--plans-dir=` | `MCP_COMPLEX_PLANS_PLANS_DIR` | Directory name used to store plan files |
 | `disabled_tools` | string[] | `[]` | `--disabled-tools=` | `MCP_COMPLEX_PLANS_DISABLED_TOOLS` | List of tools to disable (comma-separated) |
 
 ### Configuration Examples
@@ -118,19 +162,21 @@ The server supports multiple configuration methods with the following **priority
   "default_editor": "vscode",
   "auto_delete_plans": false,
   "add_to_gitignore": true,
+  "plans_dir": ".complex_plans",
   "disabled_tools": ["listPlans"]
 }
 ```
 
 **CLI arguments:**
 ```bash
-node dist/index.js --default-editor=vscode --auto-delete-plans=false --disabled-tools=listPlans,deletePlan
+node dist/index.js --default-editor=vscode --auto-delete-plans=false --plans-dir=.complex_plans --disabled-tools=listPlans,deletePlan
 ```
 
 **Environment variables:**
 ```bash
 export MCP_COMPLEX_PLANS_DEFAULT_EDITOR="vscode"
 export MCP_COMPLEX_PLANS_AUTO_DELETE_PLANS="false"
+export MCP_COMPLEX_PLANS_PLANS_DIR=".complex_plans"
 export MCP_COMPLEX_PLANS_DISABLED_TOOLS="listPlans,deletePlan"
 ```
 
