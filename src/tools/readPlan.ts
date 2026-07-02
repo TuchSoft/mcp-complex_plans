@@ -2,10 +2,14 @@ import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getWorkspaceRoot, loadPromptDescription } from "../utils.js";
+import {
+  getWorkspaceRoot,
+  getPlanDirectory,
+  loadPromptDescription,
+} from "../utils.js";
 
 /**
- * Reads the content of an existing plan file from the .complex_plans directory.
+ * Reads the content of an existing plan file from the plans directory.
  * Can optionally add implementation instructions when ready_to_implement is true.
  *
  * @param planName - Name of the plan (used for filename)
@@ -18,7 +22,7 @@ export async function readPlan(
   workspaceRoot?: string,
 ): Promise<string> {
   const root = workspaceRoot || getWorkspaceRoot();
-  const planPath = join(root, ".complex_plans", `${planName}.md`);
+  const planPath = join(getPlanDirectory(root), `${planName}.md`);
 
   // Check if plan exists
   if (!existsSync(planPath)) {

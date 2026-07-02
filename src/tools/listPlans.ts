@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { readdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   getWorkspaceRoot,
   getPlanDirectory,
   loadPromptDescription,
 } from "../utils.js";
+import { config } from "../config.js";
 
 // Define the tool schema
 const listPlansSchema = z.object({
@@ -26,19 +26,19 @@ export function registerListPlansTool(server: McpServer): void {
       const planDir = getPlanDirectory(workspaceRoot);
 
       try {
-        // Check if .complex_plans directory exists
+        // Check if plans directory exists
         if (!existsSync(planDir)) {
           return {
             content: [
               {
                 type: "text",
-                text: "No plans found. The .complex_plans directory does not exist yet.",
+                text: `No plans found. The ${config.plans_dir} directory does not exist yet.`,
               },
             ],
           };
         }
 
-        // Read all items in the .complex_plans directory
+        // Read all items in the plans directory
         const items = readdirSync(planDir, { withFileTypes: true });
 
         // Filter only markdown files (each plan is a .md file)
@@ -51,7 +51,7 @@ export function registerListPlansTool(server: McpServer): void {
             content: [
               {
                 type: "text",
-                text: "No plans found in the .complex_plans directory.",
+                text: `No plans found in the ${config.plans_dir} directory.`,
               },
             ],
           };

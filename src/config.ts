@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { join, isAbsolute } from "node:path";
 
 // Configuration management
 const configSchema = z.object({
@@ -15,11 +15,23 @@ const configSchema = z.object({
   add_to_gitignore: z
     .boolean()
     .optional()
-    .describe("Automatically add .complex_plans to .gitignore"),
+    .describe("Automatically add the plans directory to .gitignore"),
   disabled_tools: z
     .array(z.string())
     .optional()
     .describe("List of tools to disable"),
+  plans_dir: z
+    .string()
+    .min(1, "plans_dir must not be empty")
+    .refine(
+      (v) =>
+        !isAbsolute(v) &&
+        !/[\r\n\0]/.test(v) &&
+        !v.split(/[\\/]/).includes(".."),
+      "plans_dir must be a relative path with no '..' segments, no control characters, and no absolute paths",
+    )
+    .default(".complex_plans")
+    .describe("Directory name used to store plan files"),
 });
 
 export type ServerConfig = z.infer<typeof configSchema>;
@@ -29,6 +41,7 @@ export const DEFAULT_CONFIG: ServerConfig = {
   auto_delete_plans: false,
   add_to_gitignore: true,
   disabled_tools: [],
+  plans_dir: ".complex_plans",
 };
 
 // Parse environment variables
@@ -57,11 +70,15 @@ function parseEnvVars(): Partial<ServerConfig> {
         .filter((tool) => tool.length > 0);
   }
 
+  if (process.env.MCP_COMPLEX_PLANS_PLANS_DIR) {
+    envConfig.plans_dir = process.env.MCP_COMPLEX_PLANS_PLANS_DIR;
+  }
+
   return envConfig;
 }
 
 // Parse CLI arguments
-function parseCliArgs(): Partial<ServerConfig> {
+export function parseCliArgs(): Partial<ServerConfig> {
   const cliConfig: Partial<ServerConfig> = {
     disabled_tools: [],
   };
@@ -93,6 +110,8 @@ function parseCliArgs(): Partial<ServerConfig> {
         ];
         i++; // Skip the next argument
       }
+    } else if (arg.startsWith("--plans-dir=")) {
+      cliConfig.plans_dir = arg.split("=")[1];
     }
   }
 
@@ -103,15 +122,17 @@ export function loadConfig(cliArgs?: Partial<ServerConfig>): ServerConfig {
   const parsedCliArgs = cliArgs || parseCliArgs();
   const parsedEnvVars = parseEnvVars();
 
+  // Determine where to look for config.json: env/CLI can override the default
+  // plans directory. The config file itself can still override plans_dir.
+  const preliminaryPlansDir =
+    parsedCliArgs.plans_dir ??
+    parsedEnvVars.plans_dir ??
+    DEFAULT_CONFIG.plans_dir;
+
   try {
-    // 1. First priority: config.json in .complex_plans directory
-    const aiPlansConfigPath = join(
-      process.cwd(),
-      ".complex_plans",
-      "config.json",
-    );
-    if (existsSync(aiPlansConfigPath)) {
-      const configContent = readFileSync(aiPlansConfigPath, "utf-8");
+    const configPath = join(process.cwd(), preliminaryPlansDir, "config.json");
+    if (existsSync(configPath)) {
+      const configContent = readFileSync(configPath, "utf-8");
       const parsed = JSON.parse(configContent);
       // Config file has highest priority, then CLI args, then env vars
       const merged = {
@@ -135,7 +156,12 @@ export function loadConfig(cliArgs?: Partial<ServerConfig>): ServerConfig {
       const merged = { ...DEFAULT_CONFIG, ...parsedEnvVars };
       return configSchema.parse(merged);
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error(
+      "Failed to load configuration, falling back to defaults:",
+      error,
+    );
+  }
 
   // 7. Seventh priority: defaults only
   return DEFAULT_CONFIG;
@@ -143,17 +169,18 @@ export function loadConfig(cliArgs?: Partial<ServerConfig>): ServerConfig {
 
 export function saveConfig(config: ServerConfig): void {
   try {
-    const configDir = join(process.cwd(), ".complex_plans");
+    const configDir = join(process.cwd(), config.plans_dir);
     const configPath = join(configDir, "config.json");
 
-    // Ensure .complex_plans directory exists
+    // Ensure plans directory exists
     if (!existsSync(configDir)) {
-      // Note: In a real implementation, you'd create the directory here
-      // For now, we'll just try to write and let it fail if directory doesn't exist
+      mkdirSync(configDir, { recursive: true });
     }
 
     writeFileSync(configPath, JSON.stringify(config, null, 2), "utf-8");
-  } catch (error) {}
+  } catch (error) {
+    console.error("Failed to save config:", error);
+  }
 }
 
 export const config = loadConfig();

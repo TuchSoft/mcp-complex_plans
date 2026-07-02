@@ -1,6 +1,10 @@
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import { getWorkspaceRoot, loadPromptDescription } from "../utils.js";
+import {
+  getWorkspaceRoot,
+  getPlanDirectory,
+  loadPromptDescription,
+} from "../utils.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import replaceInFile from "replace-in-file";
@@ -51,7 +55,7 @@ function parseSearchReplaceBlocks(content: string): SearchReplaceBlock[] {
 }
 
 /**
- * Updates an existing plan file in the .complex_plans directory using SEARCH/REPLACE blocks.
+ * Updates an existing plan file in the plans directory using SEARCH/REPLACE blocks.
  * Always read the plan first to ensure you have the latest content before updating.
  *
  * @param planName - Name of the plan (used for filename)
@@ -64,7 +68,7 @@ export async function updatePlan(
   workspaceRoot?: string,
 ): Promise<{ applied: number; warnings: string[] }> {
   const root = workspaceRoot || getWorkspaceRoot();
-  const planPath = join(root, ".complex_plans", `${planName}.md`);
+  const planPath = join(getPlanDirectory(root), `${planName}.md`);
 
   // Read the existing plan to ensure we have the latest content
   let existingContent = "";

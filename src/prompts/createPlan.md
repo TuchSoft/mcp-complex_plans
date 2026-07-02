@@ -1,9 +1,9 @@
-Create a new plan file in the .complex_plans directory.
+Create a new plan file in the {{PLANS_DIR}} directory.
 
 CRITICAL PROTOCOL FOR COMPLEX TASKS:
 - YOU MUST automatically generate a plan for ANY complex task (multi-file edits, significant changes)
-- MUST use sequential_thinking tool first to analyze the task
-- MUST create markdown plan in .complex_plans/{plan-name}.md
+- MUST reason internally (use sequential_thinking tool if available) first to analyze the task
+- MUST create markdown plan in {{PLANS_DIR}}/{plan-name}.md
 - MUST open plan in editor for user review using open_in_editor tool
 - MUST terminate the conversation and await explicit user approval before implementing (the user must prompt something like "ok, proceed", "let's implement it" or similar)
 - MUST re-read plan from disk before implementation (the user might have changed it, with more details)
@@ -50,7 +50,7 @@ WHEN TO USE:
 - When the user explicity requires a plan to be written
 
 TOOL INTEGRATION:
-- sequential_thinking: Use before plan creation for analysis
+- sequential_thinking (if available): Use before plan creation for analysis
 - ask_user_question: To ask user specif question before finalizing the plan
 - open_in_editor: Use to show plans to users for review
 - read_plan: Use to re-read plans before implementation, update or review
@@ -59,7 +59,7 @@ TOOL INTEGRATION:
 
 EXECUTION PROCESS:
 - User ask for a complex task or to generate a plan
-- You MUST research and think about the request use tools like `readPlan` (for plans), `grep`, `web_search`, `ls` and more importanlty `sequential_thinking`.
+- You MUST research and think about the request use tools like `readPlan` (for plans), `grep`, `web_search`, `ls` and, if available, `sequential_thinking`.
 - You MUST call `create_plan` to create a markdown plan
 - You can call additional readonly tools like `readPlan` (for plans), `grep`, `web_search` or `ls` before finalizng the plan.
 - You CAN call `update_plan` if you need to make changes to the plan, add details or modify it.

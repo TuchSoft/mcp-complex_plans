@@ -12,8 +12,13 @@ import { config } from "./config.js";
 /**
  * Loads a prompt description from a markdown file
  * Uses the package's installation directory to resolve prompt paths
+ *
+ * Supports runtime placeholders:
+ * - {{PLANS_DIR}} is replaced with the configured plans directory name
  */
 export function loadPromptDescription(promptName: string): string {
+  let content: string;
+
   try {
     // Get the current module's directory
     const __filename = fileURLToPath(import.meta.url);
@@ -22,27 +27,30 @@ export function loadPromptDescription(promptName: string): string {
     // Try prompts directory alongside the module (production - dist/prompts)
     let promptPath = join(__dirname, "prompts", `${promptName}.md`);
     if (existsSync(promptPath)) {
-      return readFileSync(promptPath, "utf-8");
+      content = readFileSync(promptPath, "utf-8");
+    } else {
+      // Fallback to src/prompts (development)
+      promptPath = join(
+        __dirname,
+        "..",
+        "..",
+        "src",
+        "prompts",
+        `${promptName}.md`,
+      );
+      if (existsSync(promptPath)) {
+        content = readFileSync(promptPath, "utf-8");
+      } else {
+        throw new Error(`Prompt file not found: ${promptName}.md`);
+      }
     }
-
-    // Fallback to src/prompts (development)
-    promptPath = join(
-      __dirname,
-      "..",
-      "..",
-      "src",
-      "prompts",
-      `${promptName}.md`,
-    );
-    if (existsSync(promptPath)) {
-      return readFileSync(promptPath, "utf-8");
-    }
-
-    throw new Error(`Prompt file not found: ${promptName}.md`);
   } catch (error) {
     console.error(`Failed to load prompt ${promptName}:`, error);
     return `Description for ${promptName} not available`;
   }
+
+  // Apply runtime substitutions
+  return content.replace(/\{\{PLANS_DIR\}\}/g, config.plans_dir);
 }
 
 export function getWorkspaceRoot(root?: string): string {
@@ -50,15 +58,14 @@ export function getWorkspaceRoot(root?: string): string {
 }
 
 export function getPlanDirectory(workspaceRoot: string): string {
-  return join(workspaceRoot, ".complex_plans");
+  return join(workspaceRoot, config.plans_dir);
 }
 
 export async function handleGitignore(workspaceRoot: string): Promise<void> {
   if (!config.add_to_gitignore) return;
 
   const gitignorePath = join(workspaceRoot, ".gitignore");
-  const planDir = getPlanDirectory(workspaceRoot);
-  const relativePlanDir = ".complex_plans";
+  const relativePlanDir = config.plans_dir;
 
   try {
     let gitignoreContent = "";
@@ -67,7 +74,7 @@ export async function handleGitignore(workspaceRoot: string): Promise<void> {
     }
 
     if (!gitignoreContent.includes(relativePlanDir)) {
-      gitignoreContent += `\n#Ignore the AI complex_plans directory\n${relativePlanDir}\n`;
+      gitignoreContent += `\n#Ignore the AI plans directory\n${relativePlanDir}\n`;
       writeFileSync(gitignorePath, gitignoreContent, "utf-8");
     }
   } catch (error) {}

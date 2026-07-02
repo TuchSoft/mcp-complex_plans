@@ -19,14 +19,15 @@ const createPlanSchema = z.object({
 
 export function registerCreatePlanTool(server: McpServer): void {
   const description =
-    loadPromptDescription("createPlan") + config.auto_delete_plans
+    loadPromptDescription("createPlan") +
+    (config.auto_delete_plans
       ? "\nEnabled - plan must be deleted after implementation with the `deletePlan` tool"
-      : "";
+      : "");
 
   server.registerTool(
     "createPlan",
     {
-      description: loadPromptDescription("createPlan"),
+      description,
       inputSchema: createPlanSchema,
     },
     async (params: {
@@ -39,13 +40,13 @@ export function registerCreatePlanTool(server: McpServer): void {
       const planDir = getPlanDirectory(workspaceRoot);
 
       try {
-        // Create .complex_plans directory if it doesn't exist
+        // Create plans directory if it doesn't exist
         if (!existsSync(planDir)) {
           mkdirSync(planDir, { recursive: true });
           await handleGitignore(workspaceRoot);
         }
 
-        // Write plan file directly in .complex_plans directory
+        // Write plan file directly in the plans directory
         const planFilePath = join(planDir, `${plan_name}.md`);
         writeFileSync(planFilePath, plan_content, "utf-8");
 

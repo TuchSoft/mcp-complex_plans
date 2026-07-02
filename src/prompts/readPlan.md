@@ -1,4 +1,4 @@
-Read the content of an existing plan file from the .complex_plans directory.
+Read the content of an existing plan file from the {{PLANS_DIR}} directory.
 Use this tool INSTEAD OF read_file to retrieve plan details before updates, reviews, or implementation.
 Use this tool not the standard `read_file` to read a plan.
 ONLY USE THIS TOOL FOR READING PLANS, NOT FOR NORMAL PROJECT FILES

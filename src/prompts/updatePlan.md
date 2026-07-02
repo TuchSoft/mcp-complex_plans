@@ -1,4 +1,4 @@
-Update an existing plan file in the .complex_plans directory using SEARCH/REPLACE blocks. This tool allows partial edits without rewriting the entire plan.
+Update an existing plan file in the {{PLANS_DIR}} directory using SEARCH/REPLACE blocks. This tool allows partial edits without rewriting the entire plan.
 Use this tool when the user want to add details, review the plan, or one explcity ask to update a plan.
 Do not create a new plan when user ask to update plan.
 Never create a plan for planning the update of a plan.
