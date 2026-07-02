@@ -1,0 +1,54 @@
+src/config.ts
+  s_8f7e85e38ca0c8::t_34322fd2c4bf1b 2
+  s_8f7e85e38ca0c8::t_b6ffce2ce3ef55 159-164
+  s_8f7e85e38ca0c8::t_178c2aacfbb6fe 3
+  s_8f7e85e38ca0c8::t_8bbdd09781d18c 81
+  s_8f7e85e38ca0c8::t_8421512d9b73cc 26-33
+  s_8f7e85e38ca0c8::t_6065bf6783bf37 133
+  s_8f7e85e38ca0c8::t_302ff45579998c 75,177,181-183
+  s_8f7e85e38ca0c8::t_7d296c03e3de51 23-25
+  s_8f7e85e38ca0c8::t_95def07642a8ef 34
+  s_8f7e85e38ca0c8::t_6833be7ee38524 73-74
+  s_8f7e85e38ca0c8::t_68f5dae957727a 76
+  s_8f7e85e38ca0c8::t_8f726b0e24b02c 134-135
+  s_8f7e85e38ca0c8::t_2f4dd8906f3f17 18,44,113-114,125-131,172,175
+src/utils.ts
+  s_8f7e85e38ca0c8::t_19aa75b38e3d81 53,61,68
+  s_8f7e85e38ca0c8::t_5708cf35eee601 51-52
+  s_8f7e85e38ca0c8::t_bce4230ce8f92e 15-17,20-21,30-45,77
+src/prompts/createPlan.md
+  s_5f3f47ece8fd98::t_0d7ee4381dd397 62
+  s_5f3f47ece8fd98::t_8b8ee29f05cedc 53
+  s_5f3f47ece8fd98::t_79cf6e06fe3819 5
+  s_5f3f47ece8fd98::t_9f303bee8d9efc 6
+src/tools/listPlans.ts
+  s_8f7e85e38ca0c8::t_ba3477c8200ec1 54
+  s_8f7e85e38ca0c8::t_3a202846b4763d 9,29,35,41
+src/index.ts
+  s_8f7e85e38ca0c8::t_7efeeaeb59b0be 7,18-22,26-27,33,35-39,46-49,51
+  s_8f7e85e38ca0c8::t_9069d1bbd96176 54-62,65-71
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "96fd32816e232694b0459d8626371e9de5ced7e6",
+  "prompts": {},
+  "sessions": {
+    "s_5f3f47ece8fd98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2554fda8-efb9-4ef9-b940-f7928a04d315",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mattia Bonzi <mattia@mattiabonzi.it>"
+    },
+    "s_8f7e85e38ca0c8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "23a0b71e-88ce-4662-b07d-d7b6c38f3b83",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Mattia Bonzi <mattia@mattiabonzi.it>"
+    }
+  }
+}
