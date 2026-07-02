@@ -1,0 +1,21 @@
+README.md
+  s_5f3f47ece8fd98::t_98dffd33072f0a 82,85
+  s_5f3f47ece8fd98::t_1123db1660ff97 88-125
+  s_5f3f47ece8fd98::t_c0766231f2de79 126-128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "2e398c25c7bc78ac8ad4e03c068e5adcc6397850",
+  "prompts": {},
+  "sessions": {
+    "s_5f3f47ece8fd98": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2554fda8-efb9-4ef9-b940-f7928a04d315",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Mattia Bonzi <mattia@mattiabonzi.it>"
+    }
+  }
+}
