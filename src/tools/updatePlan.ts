@@ -110,6 +110,7 @@ export async function updatePlan(
       files: replacement.files,
       from: replacement.from,
       to: replacement.to,
+      countMatches: true,
     });
     results.push(result);
   }
