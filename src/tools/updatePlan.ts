@@ -4,6 +4,7 @@ import {
   getWorkspaceRoot,
   getPlanDirectory,
   loadPromptDescription,
+  resolvePlanFile,
 } from "../utils.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
@@ -68,7 +69,8 @@ export async function updatePlan(
   workspaceRoot?: string,
 ): Promise<{ applied: number; warnings: string[] }> {
   const root = workspaceRoot || getWorkspaceRoot();
-  const planPath = join(getPlanDirectory(root), `${planName}.md`);
+  const planDir = getPlanDirectory(root);
+  const planPath = resolvePlanFile(planDir, planName);
 
   // Read the existing plan to ensure we have the latest content
   let existingContent = "";

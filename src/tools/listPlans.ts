@@ -5,6 +5,8 @@ import {
   getWorkspaceRoot,
   getPlanDirectory,
   loadPromptDescription,
+  stampToDate,
+  isValidStamp,
 } from "../utils.js";
 import { config } from "../config.js";
 
@@ -51,7 +53,27 @@ export function registerListPlansTool(server: McpServer): void {
         // Filter only markdown files (each plan is a .md file)
         const plans = items
           .filter((item) => item.isFile() && item.name.endsWith(".md"))
-          .map((item) => item.name.replace(".md", ""));
+          .map((item) => {
+            const fileName = item.name;
+            const nameWithoutExt = fileName.replace(".md", "");
+            const parts = nameWithoutExt.split("-");
+            const maybeStamp = parts[0];
+            if (isValidStamp(maybeStamp) && parts.length > 1) {
+              return {
+                id: maybeStamp.toUpperCase(),
+                name: parts.slice(1).join("-"),
+                date: stampToDate(maybeStamp).toISOString(),
+                fileName,
+              };
+            }
+            return {
+              id: null,
+              name: nameWithoutExt,
+              date: null,
+              fileName,
+            };
+          })
+          .sort((a, b) => a.fileName.localeCompare(b.fileName));
 
         if (plans.length === 0) {
           return {
@@ -64,11 +86,21 @@ export function registerListPlansTool(server: McpServer): void {
           };
         }
 
+        const planText = plans
+          .map((plan) => {
+            const idPart = plan.id ? `ID: ${plan.id}` : "ID: (none)";
+            const datePart = plan.date
+              ? `Date: ${plan.date}`
+              : "Date: (unknown)";
+            return `- ${idPart} | Name: ${plan.name} | ${datePart}`;
+          })
+          .join("\n");
+
         return {
           content: [
             {
               type: "text",
-              text: `Found ${plans.length} plan(s): ${plans.join(", ")}`,
+              text: `Found ${plans.length} plan(s):\n${planText}`,
             },
           ],
         };

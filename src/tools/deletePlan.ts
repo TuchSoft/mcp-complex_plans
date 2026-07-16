@@ -6,6 +6,7 @@ import {
   getWorkspaceRoot,
   getPlanDirectory,
   loadPromptDescription,
+  resolvePlanFile,
 } from "../utils.js";
 
 // Define the tool schema
@@ -32,7 +33,7 @@ export function registerDeletePlanTool(server: McpServer): void {
       const { plan_name, workspace_root } = params;
       const workspaceRoot = getWorkspaceRoot(workspace_root);
       const planDir = getPlanDirectory(workspaceRoot);
-      const planFilePath = join(planDir, `${plan_name}.md`);
+      const planFilePath = resolvePlanFile(planDir, plan_name);
 
       try {
         if (!existsSync(planFilePath)) {

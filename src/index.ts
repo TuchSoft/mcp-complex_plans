@@ -65,7 +65,7 @@ const instructions = baseInstructions + historicalNote;
 const server = new McpServer(
   {
     name: "MCP Complex Plans Server",
-    version: "1.3.2",
+    version: "1.3.3",
   },
   { instructions },
 );

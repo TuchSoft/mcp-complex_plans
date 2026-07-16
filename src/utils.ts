@@ -4,6 +4,7 @@ import {
   writeFileSync,
   mkdirSync,
   rmSync,
+  readdirSync,
 } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -59,6 +60,94 @@ export function getWorkspaceRoot(root?: string): string {
 
 export function getPlanDirectory(workspaceRoot: string): string {
   return join(workspaceRoot, config.plans_dir);
+}
+
+/**
+ * Generates a short, sortable timestamp-based code.
+ * Uses 10-second intervals since 2000-01-01 encoded in base36.
+ */
+export function tenStamp(length = 6): string {
+  const EPOCH_2000 = 946684800;
+  const secondsSince2000 = Math.floor(Date.now() / 1000) - EPOCH_2000;
+  const intervals = Math.floor(secondsSince2000 / 10);
+  return intervals.toString(36).toUpperCase().padStart(length, "0");
+}
+
+/**
+ * Reverses a tenStamp code back to the approximate Date it represents.
+ */
+export function stampToDate(stamp: string): Date {
+  const EPOCH_2000 = 946684800;
+  const intervals = parseInt(stamp.toLowerCase(), 36);
+  const secondsSince2000 = intervals * 10;
+  const timestamp = (secondsSince2000 + EPOCH_2000) * 1000;
+  return new Date(timestamp);
+}
+
+/**
+ * Checks whether a string is a plausible tenStamp ID:
+ * 6 base36 characters that decode to a date between 2000 and 2100.
+ */
+export function isValidStamp(stamp: string): boolean {
+  if (!/^[A-Z0-9]{6}$/i.test(stamp)) return false;
+  const date = stampToDate(stamp);
+  const minDate = new Date("2000-01-01T00:00:00.000Z");
+  const maxDate = new Date("2100-01-01T00:00:00.000Z");
+  return date >= minDate && date < maxDate;
+}
+
+/**
+ * Resolves a plan name to an actual plan file path.
+ * Accepts:
+ * - full prefixed name: XXXXXX-plan-name
+ * - bare plan name: plan-name
+ * - 6-character stamp ID: XXXXXX
+ * - legacy unprefixed name: plan-name (direct file match)
+ */
+export function resolvePlanFile(
+  planDir: string,
+  planName: string,
+): string {
+  const directPath = join(planDir, `${planName}.md`);
+  if (existsSync(directPath)) {
+    return directPath;
+  }
+
+  const files = readdirSync(planDir);
+
+  // If planName looks like a valid stamp ID, resolve by prefix.
+  if (isValidStamp(planName)) {
+    const prefix = `${planName}-`;
+    const matches = files.filter(
+      (file) => file.endsWith(".md") && file.startsWith(prefix),
+    );
+    if (matches.length === 1) {
+      return join(planDir, matches[0]);
+    }
+    if (matches.length > 1) {
+      throw new Error(
+        `Multiple plans match ID '${planName}': ${matches.join(", ")}. Use the full plan name.`,
+      );
+    }
+  }
+
+  // Otherwise resolve by base name suffix.
+  const suffix = `-${planName}.md`;
+  const matches = files.filter(
+    (file) => file.endsWith(".md") && file.endsWith(suffix),
+  );
+
+  if (matches.length === 1) {
+    return join(planDir, matches[0]);
+  }
+
+  if (matches.length > 1) {
+    throw new Error(
+      `Multiple plans match '${planName}': ${matches.join(", ")}. Use the full plan name including its ID prefix.`,
+    );
+  }
+
+  return directPath;
 }
 
 export async function handleGitignore(workspaceRoot: string): Promise<void> {

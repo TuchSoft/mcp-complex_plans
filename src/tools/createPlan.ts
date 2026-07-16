@@ -8,6 +8,7 @@ import {
   getPlanDirectory,
   handleGitignore,
   loadPromptDescription,
+  tenStamp,
 } from "../utils.js";
 
 // Define the tool schema
@@ -53,15 +54,17 @@ export function registerCreatePlanTool(server: McpServer): void {
           await handleGitignore(workspaceRoot);
         }
 
-        // Write plan file directly in the plans directory
-        const planFilePath = join(planDir, `${plan_name}.md`);
+        // Write plan file with a sortable ID prefix
+        const planId = tenStamp();
+        const planFileName = `${planId}-${plan_name}.md`;
+        const planFilePath = join(planDir, planFileName);
         writeFileSync(planFilePath, plan_content, "utf-8");
 
         return {
           content: [
             {
               type: "text",
-              text: `Successfully created plan '${plan_name}' at ${planFilePath}`,
+              text: `Successfully created plan '${planFileName.replace(".md", "")}' at ${planFilePath}`,
             },
           ],
         };
